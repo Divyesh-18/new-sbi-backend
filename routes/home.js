@@ -1,0 +1,72 @@
+var express = require("express");
+var router = express.Router();
+
+const upload = require("../middleware/multer.middleware");
+const verifyToken = require("../middleware/auth");
+
+const homeController = require("../controllers/home");
+const requestValidator = require("../middleware/requestValidator.middaleware");
+const validator = require("../validators/auth.validator");
+const winController = require("../controllers/win");
+const authController = require("../controllers/auth");
+
+router.post("/dashbord", verifyToken, homeController.dashbord);
+router.get("/mine-dashbord", verifyToken, homeController.minedashbord);
+router.get("/get-upi", verifyToken, homeController.getupi);
+router.get("/notification-data", verifyToken, homeController.noticationdata);
+router.post("/recharge", verifyToken, requestValidator(validator.rechargeShema), homeController.recharge);
+router.post("/recharge-record", verifyToken, homeController.rechargerecord);
+router.post("/new-add-bank-betail", verifyToken, requestValidator(validator.newaddbankdetailSchema), homeController.newaddbankdetail);
+router.get("/get-bank-detail", verifyToken, homeController.getbankdetail);
+router.get("/get-bank-detail-by-user", verifyToken, homeController.getBankDetailByUser);
+router.put("/edit-bank-detail", verifyToken, requestValidator(validator.editBankDetail), homeController.editBankDetail);
+router.delete("/delete-bank-detail", verifyToken, homeController.deleteBankDetail);
+router.post("/new-Crypto-Address", verifyToken, requestValidator(validator.newCryptoAddressSchema), homeController.newCryptoAddress);
+router.post("/add-crypto-detail", verifyToken, requestValidator(validator.addcryptodetailSchema), homeController.addcryptodetail);
+router.post("/addaddress", verifyToken, requestValidator(validator.addressSchema), homeController.address);
+router.get("/get-address", verifyToken, homeController.getaddress);
+router.post("/rewardrecord", verifyToken, homeController.rewardrecord);
+router.post("/interestrecord", verifyToken, homeController.interestrecord);
+router.post("/withdrawal", verifyToken, requestValidator(validator.withdrawalSchema), homeController.withdrawal);
+router.post("/transactions", verifyToken, homeController.transactions);
+router.post("/wintransactions", verifyToken, homeController.wintransactions);
+router.get("/getCryptoDetail", verifyToken, homeController.getCryptoDetail);
+router.post("/addcomplaints", verifyToken, homeController.addcomplaints);
+router.post("/wait-complaints", verifyToken, homeController.waitcomplaints);
+router.post("/complit-complaints", verifyToken, homeController.complitcomplaints);
+
+// win route
+router.post("/batenow", verifyToken, requestValidator(validator.batenowSchema), winController.batenow);
+router.post("/getResultbyCategory", verifyToken, winController.getResultbyCategory);
+router.post("/userresult", verifyToken, winController.userresult);
+router.post("/userresult1", verifyToken, winController.userresult1);
+router.get("/logout", verifyToken, authController.logoutUser);
+router.post("/user_my_teem", verifyToken, homeController.myTeemLevelOfUsers);
+router.post("/transfer-wallet-amount", verifyToken, homeController.transferWalletAmount);
+router.post("/promotion-dashbord-new", verifyToken, homeController.promotiondashbordnew);
+router.get("/get-promotion-link", verifyToken, homeController.getPromotionLink);
+router.get("/getattendance", verifyToken, homeController.getattendance);
+router.get("/attendance", verifyToken, homeController.Attendance);
+router.post("/singalcomplaints", verifyToken, homeController.singalcomplaints);
+router.post("/trend", verifyToken, homeController.trend);
+router.post("/delete-address", verifyToken, homeController.deleteAddress);
+router.post("/withdrawal-record", verifyToken, homeController.withdrawalRecord);
+router.post("/get-all-chat-app-list-users", verifyToken, homeController.getAllChatAppListUsers);
+router.post("/addmessage", upload.single("image"), verifyToken, homeController.addMessage);
+router.post("/allmessageget", verifyToken, homeController.AllMessageGet);
+router.post("/getAllUser", verifyToken, homeController.getAllUser);
+router.post("/getAllUserwithsearch", verifyToken, homeController.getAllUserwithsearch);
+router.get("/getloginuser", verifyToken, homeController.getloginuser);
+router.get("/fine-fser-fromUrl", verifyToken, homeController.fineUserFromUrl);
+router.post("/MessageSeenAndUnseen", verifyToken, homeController.MessageSeenAndUnseen);
+router.post('/bonus_record', verifyToken, homeController.bonusRecord);
+router.post('/apply_record', verifyToken, homeController.applyRecord);
+router.post('/add_redenvelope', verifyToken, homeController.addRedEnvelope);
+router.get('/get-red-envolop', verifyToken, homeController.getRedEnvolop);
+router.get('/get-envelope/:id', verifyToken, homeController.getEnvelope);
+router.get("/get-telegram-link", verifyToken, homeController.getTelegramLink);
+router.get("/get-qr-code", verifyToken, homeController.getQrCodeImg);
+router.get("/get-recharge-amount", verifyToken, homeController.getMinimumRechargeAmount);
+router.post("/check-missing-user-result", winController.checkMissingUserResult);
+
+module.exports = router;

@@ -1,0 +1,63 @@
+[
+    {
+        "color": "<span style=\"color:#f00;\">Red</span> + <span style=\"color:#C71585;\">Violet</span>",
+        "value": "red+violet",
+        "number": 0,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#090;\">Green</span>",
+        "value": "green",
+        "number": 1,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#f00;\">Red</span>",
+        "value": "red",
+        "number": 2,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#090;\">Green</span>",
+        "value": "green",
+        "number": 3,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#f00;\">Red</span>",
+        "value": "red",
+        "number": 4,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#090;\">Green</span> + <span style=\"color:#C71585;\">Violet</span>",
+        "value": "green+violet",
+        "number": 5,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#f00;\">Red</span>",
+        "value": "red",
+        "number": 6,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#090;\">Green</span>",
+        "value": "green",
+        "number": 7,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#f00;\">Red</span>",
+        "value": "red",
+        "number": 8,
+        "status": 0
+    },
+    {
+        "color": "<span style=\"color:#090;\">Green</span>",
+        "value": "green",
+        "number": 9,
+        "status": 0
+    }
+    
+  ]

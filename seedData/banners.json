@@ -1,0 +1,27 @@
+[
+  {
+    "banner_title": "banner1",
+    "material": "banner1.jpg",
+    "status": 1
+  },
+  {
+    "banner_title": "banner2",
+    "material": "banner2.jpg",
+    "status": 1
+  },
+  {
+    "banner_title": "banner3",
+    "material": "banner3.jpg",
+    "status": 1
+  },
+  {
+    "banner_title": "banner4",
+    "material": "banner4.jpg",
+    "status": 1
+  },
+  {
+    "banner_title": "banner5",
+    "material": "banner5.jpg",
+    "status": 1
+  }
+]

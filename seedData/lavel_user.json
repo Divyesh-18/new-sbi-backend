@@ -1,0 +1,62 @@
+[
+    {
+        "lavel_id": 1,
+        "percentage": 30,
+        "amount": 5,
+        "status": 1
+    },
+    {
+        "lavel_id": 2,
+        "percentage": 20,
+        "amount": 4,
+        "status": 1
+    },
+    {
+        "lavel_id": 3,
+        "percentage": 10,
+        "amount": 4,
+        "status": 1
+    },
+    {
+        "lavel_id": 4,
+        "percentage": 10,
+        "amount": 2,
+        "status": 1
+    },
+    {
+        "lavel_id": 5,
+        "percentage": 5,
+        "amount": 2,
+        "status": 1
+    },
+    {
+        "lavel_id": 6,
+        "percentage": 5,
+        "amount": 2,
+        "status": 1
+    },
+    {
+        "lavel_id": 7,
+        "percentage": 5,
+        "amount": 2,
+        "status": 1
+    },
+    {
+        "lavel_id": 8,
+        "percentage": 5,
+        "amount": 2,
+        "status": 1
+    },
+    {
+        "lavel_id": 9,
+        "percentage": 5,
+        "amount": 2,
+        "status": 1
+    },
+    {
+        "lavel_id": 10,
+        "percentage": 5,
+        "amount": 2,
+        "status": 1
+    }
+  ]

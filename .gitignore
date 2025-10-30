@@ -1,0 +1,7 @@
+# Node Modules
+#-------------------------
+node_modules/*
+logs/*
+public/images/*
+.env
+package-lock.json

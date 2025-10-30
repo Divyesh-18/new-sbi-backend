@@ -1,0 +1,15 @@
+[
+    {
+        "_id": "65fd12c3ff50c418de50f941",
+        "email": "test@gmail.com",
+        "mobile": 1234567890,
+        "loginId":1,
+        "password": "123456",
+        "country_code": "91",
+        "owncode": "NT1DGPUK",
+        "status": true,
+        "active": true,
+        "play": false,
+        "red_envelope":false
+      }
+  ]

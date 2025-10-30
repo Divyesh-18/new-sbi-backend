@@ -1,0 +1,29 @@
+[
+  {
+    "UPI_ID": "demo@m2002",
+    "commission_rate": 2,
+    "interest_rate": 2,
+    "withdrawalamount": 300,
+    "batbonus": 1,
+    "rechargebonus1": 30,
+    "sitename": "color game",
+    "favicon": "logo.jpg",
+    "logo": "logo.jpg",
+    "apk": "ColorGame.apk",
+    "signupbonusamount": 10,
+    "withdrawal_status": true,
+    "telegram_link":"https://t.me/",
+    "theme_color":"#2859A5",
+     "qr_code":"qr_code.png",
+     "minimum_withdrawal_amount":200,
+     "minimum_recharge_amount":300,
+     "autoLoginId":"1",
+     "second_upi_id":"demo2@m2002",
+     "third_upi_id":"demo3@m2002",
+     "thad_qr_code":"qr_code.png",
+     "usdt_rate":1,
+     "usdt_code":"TRC20",
+     "usdt_qr":"qr_code.png",
+     "usdt_id":"your_usdt_id"
+  }
+]
