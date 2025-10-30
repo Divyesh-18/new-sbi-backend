@@ -261,17 +261,26 @@ const bateresult = async function (req, res) {
     const firstperiodid = moment().format("YYYYMMDD") + sprintf("%03d", 1);
     const lastperiodid = moment().subtract(1, "days").format("YYYYMMDD") + sprintf("%03d", 480);
     
-    const currentDate = newmoment().tz("Asia/Kolkata").format("YYYYMMDD");
-    const nowDay = newmoment().tz("Asia/Kolkata");
-    const totalMinutes = nowDay.hours() * 60 + nowDay.minutes();
-    const minutesDivided = Math.floor(totalMinutes / 3);
-    const formattedNumber = sprintf("%03d", minutesDivided);
-    const nextperiodid = currentDate + formattedNumber;
+    // const currentDate = newmoment().tz("Asia/Kolkata").format("YYYYMMDD");
+    // const nowDay = newmoment().tz("Asia/Kolkata");
+    // const totalMinutes = nowDay.hours() * 60 + nowDay.minutes();
+    // const minutesDivided = Math.floor(totalMinutes / 3);
+    // const formattedNumber = sprintf("%03d", minutesDivided);
+    // const nextperiodid = currentDate + formattedNumber;
+
+    let currantinitcount = moment().hours() * 60 + moment().minutes() + 1;
+    const minutesDivided = Math.floor(currantinitcount / 3) + 1;
+    currantinitcount = sprintf("%03d", minutesDivided);
+    const nextperiodid = moment().format("YYYYMMDD") + currantinitcount;
     let nextid = periodid + 1;
     const GameIdcount = await GameId.countDocuments();
     if (GameIdcount == 0) {
       const GameIdcerate = await GameId.create({
         gameid: firstperiodid,
+      });
+    } else if (nextperiodid != nextid) {
+      const GameIdcerate = await GameId.create({
+        gameid: nextperiodid,
       });
     } else if (lastperiodid == periodid) {
       const RemoveGameId = await GameId.deleteMany();
@@ -279,11 +288,7 @@ const bateresult = async function (req, res) {
       const GameIdcerate = await GameId.create({
         gameid: firstperiodid,
       });
-    } else if (nextperiodid != nextid){
-      const GameIdcerate = await GameId.create({
-        gameid: nextperiodid,
-      });
-    } else {
+    }  else {
       const GameIdcerate = await GameId.create({
         gameid: nextid,
       });

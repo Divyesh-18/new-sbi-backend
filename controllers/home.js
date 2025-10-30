@@ -515,7 +515,7 @@ const generateWithdrawalCode = () => {
   const minutes = String(now.getMinutes()).padStart(2, "0");
 
   const randomDigits = Math.floor(100000 + Math.random() * 900000);
-  return `sbiWS${year}${month}${date}${hour}${minutes}${randomDigits}`;
+  return `pokerbaazi${year}${month}${date}${hour}${minutes}${randomDigits}`;
 };
 
 
