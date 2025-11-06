@@ -1,31 +1,24 @@
 const { catchBlock } = require("../../helpers/utils.helper");
-
-const oneMinUserResult = require("../../models/oneMinUserResult.model");
+const fastWinResult = require("../../models/fastWinResult");
+const fastWinPeriodIdModel = require("../../models/fastWinPeriodid");
+const fastGameBetting = require("../../models/fastGameBetting");
+const fastWinUserResult = require("../../models/fastWinUserResult");
 const users = require("../../models/user");
 const levelUser = require("../../models/lavelusers");
-const oneMinOrder = require("../../models/oneMinOrder.model");
 const Wallet = require("../../models/wallet");
 const walletSummery = require("../../models/walletsummery");
-const oneMinResult  = require("../../models/oneMinResult.model");
-const oneMinPeriodModule  = require("../../models/oneMinPeriodId.model");
-const oneMinBetting  = require("../../models/oneMinBetting.model");
-var ObjectId = require("mongoose").Types.ObjectId;
+const fastWinOrder = require("../../models/fastWinOrder");
+const { ObjectId } = require("mongodb");
 
-const getOneMinResultByCategory = async function (req, res) {
-    try {
-        let { page, pageRow, category } = req.query;
-        page = parseInt(page || 1);
-        pageRow = parseInt(pageRow || 10);
-        const skip = (page - 1) * pageRow;
-
-        const result = await oneMinResult.find({
-            tabtype: category,
-        })
-            .sort({ _id: -1 })
-            .skip(skip)
-            .limit(pageRow);
-
-        let data = result.map((value) => ({
+const getFastWinGameResultByCategory = async (req, res) => {
+    try{
+       const { page = 1, pageRow = 10, category } = req.query;
+       const fastWinResults = await fastWinResult.find({ tabtype: category })
+           .sort({ periodid: -1 })
+           .skip((page - 1) * pageRow)
+           .limit(parseInt(pageRow));
+       const totalResults = await fastWinResult.countDocuments({ tabtype: category });
+        let data = fastWinResults.map((value) => ({
             id: value?._id,
             periodid: value?.periodid,
             price: value?.price,
@@ -36,24 +29,20 @@ const getOneMinResultByCategory = async function (req, res) {
             resulttype: value?.resulttype,
             tabtype: value?.tabtype,
         }));
-
-        const total = await oneMinResult.countDocuments({ tabtype: category });
-
-        return res.status(200).json({
-            data: data,
-            message: "success",
-            response: 1,
-            success: true,
-            total: total,
-        });
-    } catch (error) {
-         console.log("error",error);
-         return catchBlock(res, error);
+        
+       return res.status(200).json({
+              data: data,
+              currentPage: parseInt(page),
+              totalPages: Math.ceil(totalResults / pageRow),
+              totalResults: totalResults
+         });
+    }catch(error){
+        catchBlock(error, res);
     }
 };
-module.exports.getOneMinResultByCategory = getOneMinResultByCategory;
+module.exports.getFastWinGameResultByCategory = getFastWinGameResultByCategory;
 
-const getOneMinUserResult = async function (req, res) {
+const getFastWinUserResults = async (req, res) => {
     try {
         var user = req.user;
         var input = req?.body;
@@ -63,16 +52,15 @@ const getOneMinUserResult = async function (req, res) {
         var periodid = input?.periodid;
         var skip = (page - 1) * pagerow;
 
-        let currentPeriodId = await oneMinPeriodModule.findOne().sort({ _id: -1 }).limit(1);
-        console.log("currentPeriodId", periodid);
+        let currentPeriodId = await fastWinPeriodIdModel.findOne().sort({ _id: -1 }).limit(1);
         const bettingQuery = {
             userid: user._id,
             created_at: { $gte: new Date().setHours(0, 0, 0, 0) },
             tab: category,
             periodid: currentPeriodId?.gameid,
         };
-        const result = await oneMinBetting.find(bettingQuery).skip(skip).limit(pagerow);
-        const result1 = await oneMinBetting.find(bettingQuery);
+        const result = await fastGameBetting.find(bettingQuery).skip(skip).limit(pagerow);
+        const result1 = await fastGameBetting.find(bettingQuery);
 
         // skip = (page > 0) ?   : (page - 1) * pagerow - result.length;
         let k = pagerow - result.length;
@@ -85,16 +73,16 @@ const getOneMinUserResult = async function (req, res) {
         }
 
         // return true;
-        const resultCount = await oneMinBetting.countDocuments(bettingQuery);
+        const resultCount = await fastGameBetting.countDocuments(bettingQuery);
         var UserResults = [];
         if (k != 0) {
-            UserResults = await oneMinUserResult.aggregate([
+            UserResults = await fastWinUserResult.aggregate([
                 {
                     $match: { userid: new ObjectId(user._id) },
                 },
                 {
                     $lookup: {
-                        from: "oneminresults",
+                        from: "fastwinresults",
                         localField: "periodid",
                         foreignField: "periodid",
                         as: "Result",
@@ -105,14 +93,13 @@ const getOneMinUserResult = async function (req, res) {
                 .skip(c)
                 .limit(k);
         }
-
-        const total = await oneMinUserResult.aggregate([
+        const total = await fastWinUserResult.aggregate([
             {
                 $match: { userid: new ObjectId(user._id) },
             },
             {
                 $lookup: {
-                    from: "oneminresults",
+                    from: "fastwinresults",
                     localField: "periodid",
                     foreignField: "periodid",
                     as: "Result",
@@ -157,18 +144,16 @@ const getOneMinUserResult = async function (req, res) {
             waitlist: result,
             data: data,
         };
-        console.log("success", success.waitlist);
         return res.status(200).send(success);
     } catch (error) {
-         console.log("Error:-", error);
-         return catchBlock(res,error);
+        return catchBlock(res, error);
     }
 };
-module.exports.getOneMinUserResult = getOneMinUserResult;
+module.exports.getFastWinUserResults = getFastWinUserResults;
 
-const getOneMinPeriodId = async function (req, res) {
+const fastWinGamePeriodId = async function (req, res) {
     try {
-        const game_id = await oneMinPeriodModule.findOne().sort({ _id: -1 }).limit(1);
+        const game_id = await fastWinPeriodIdModel.findOne().sort({ _id: -1 }).limit(1);
         return res.status(200).json({
             data: game_id,
             message: "success",
@@ -179,149 +164,135 @@ const getOneMinPeriodId = async function (req, res) {
         return catchBlock(res, error);
     }
 };
-module.exports.getOneMinPeriodId = getOneMinPeriodId;
+module.exports.fastWinGamePeriodId = fastWinGamePeriodId;
 
 const bate = async function (req, res) {
     try {
         const user = req.user;
-        const input = req?.body;
-        const check = await users.countDocuments({
-            _id: user._id,
-            play: 1,
-        });
-        if (check > 0) {
+        const input = req.body;
+        if (input.counter < 3)
+            return res.status(200).json({ success: false, message: "Time Out" });
+
+        if (input.finalamount < 1)
+            return res.status(200).json({ success: false, message: "Amount is not valid" });
+
+        const [getUserDetails, wallet] = await Promise.all([
+            users.findById(user._id),
+            Wallet.findOne({ userid: user._id }),
+        ]);
+
+        if (!getUserDetails)
+            return res.status(404).json({ success: false, message: "User not found" });
+
+        if (getUserDetails.play === 1)
             return res.status(200).json({
+                success: false,
                 message: "Network Unavailable",
                 response: 0,
-                success: false,
             });
-        }
-        const getUserDetails = await users.findById(user._id);
-        if (!getUserDetails) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        const userCompleteRechargeDetails = getUserDetails?.code;
-        if (userCompleteRechargeDetails) {
-            const level1User = await users.findOne({ owncode: userCompleteRechargeDetails });
-            if (level1User) {
-                const level2User = await users.findOne({ owncode: level1User.code });
-                const level3User = level2User
-                    ? await users.findOne({ owncode: level2User.code })
-                    : null;
-                const levels = await levelUser.find({ lavel_id: { $in: [1, 2, 3] } });
-                const levelPercentages = levels.reduce((acc, level) => {
-                    acc[level.lavel_id] = level.percentage;
-                    return acc;
-                }, {});
 
-                // Apply bonuses
-                const distributeBonus = async (referralUser, percentage) => {
-                    if (!referralUser) return;
-                    const wallet = await Wallet.findOne({ userid: referralUser._id });
-                    const bonusAmounts = (input?.finalamount * 5) / 100;
-                    const bonusAmount = (bonusAmounts * percentage) / 100;
+        if (!wallet || wallet.amount < input.finalamount)
+            return res.status(200).json({
+                success: false,
+                message: "Your balance is insufficient",
+            });
 
-                    if (wallet) {
-                        const updatedAmount = wallet?.amount + bonusAmount;
-                        await Wallet.findOneAndUpdate(
-                            { userid: referralUser._id },
-                            { amount: updatedAmount },
-                            { new: true }
-                        );
-
-                        await walletSummery.create({
-                            userid: referralUser._id,
-                            orderid: '-',
-                            amount: bonusAmount,
-                            sender_id: user._id,
-                            type: "credit",
-                            wallet: updatedAmount,
-                            actiontype: "bonus",
-                        });
-                    }
-                };
-                await distributeBonus(level1User, levelPercentages[1] || 30);
-                await distributeBonus(level2User, levelPercentages[2] || 20);
-                await distributeBonus(level3User, levelPercentages[3] || 10);
-            }
+        let levelUsers = [];
+        if (getUserDetails.code) {
+            const level1 = await users.findOne({ owncode: getUserDetails.code });
+            const level2 = level1 ? await users.findOne({ owncode: level1.code }) : null;
+            const level3 = level2 ? await users.findOne({ owncode: level2.code }) : null;
+            levelUsers = [level1, level2, level3].filter(Boolean);
         }
 
-        if (input.counter < 30) {
-            return res.status(200).json({ success: false, message: "Time Out" });
-        } else {
-            if (input.finalamount < 1) {
-                return res
-                    .status(200)
-                    .json({ success: false, message: "Amount Is Not valid" });
-            } else {
-                const walt = await Wallet.findOne({
-                    amount: { $gte: input?.finalamount },
-                    userid: user._id,
-                });
+        const levels = await levelUser.find({ lavel_id: { $in: [1, 2, 3] } });
+        const levelPercentages = levels.reduce(
+            (acc, l) => ({ ...acc, [l.lavel_id]: l.percentage }),
+            { 1: 30, 2: 20, 3: 10 } 
+        );
+        const updatedWallet = await Wallet.findOneAndUpdate(
+            { userid: user._id, amount: { $gte: input.finalamount } },
+            { $inc: { amount: -input.finalamount } },
+            { new: true }
+        );
 
-                if (walt == null) {
-                    return res
-                        .status(200)
-                        .json({ success: false, message: "Your balance is insufficient" });
-                } else {
-                    walt.amount -= input.finalamount;
-                    await walt.save();
+        if (!updatedWallet)
+            return res.status(200).json({
+                success: false,
+                message: "Insufficient balance (update failed)",
+            });
 
-                    const data = await oneMinBetting.create({
-                        userid: user._id,
-                        periodid: input?.inputgameid,
-                        type: input?.type,
-                        value: input?.value,
-                        amount: input?.finalamount,
-                        tab: input?.tab,
-                    });
+        const tranorderid = `${Date.now()}${Math.random().toString(36).slice(2)}${user._id}`;
 
-                    // const reward_amount = (input.finalamount * 5) / 100;
-                    // await helper.bate_reward(user.code, user._id, reward_amount);
+        const [betData] = await Promise.all([
+            fastGameBetting.create({
+                userid: user._id,
+                periodid: input.inputgameid,
+                type: input.type,
+                value: input.value,
+                amount: input.finalamount,
+                tab: input.tab,
+            }),
+            fastWinOrder.create({
+                userid: user._id,
+                tranorderid,
+                amount: input.finalamount,
+                status: true,
+            }),
+            walletSummery.create({
+                userid: user._id,
+                orderid: tranorderid,
+                amount: input.finalamount,
+                type: "debit",
+                wallet: updatedWallet.amount,
+                actiontype: "join",
+            }),
+        ]);
 
-                    function generateTransactionId(userId) {
-                        return `${Date.now()}${Math.random()
-                            .toString(36)
-                            .substring(7)}${userId}`;
-                    }
+        const baseBonus = (input.finalamount * 5) / 100;
 
-                    const tranorderid = generateTransactionId(user._id);
+        await Promise.all(
+            levelUsers.map(async (refUser, i) => {
+                const level = i + 1;
+                const percentage = levelPercentages[level];
+                const bonusAmount = (baseBonus * percentage) / 100;
 
-                    await oneMinOrder.create({
-                        userid: user._id,
-                        tranorderid: tranorderid,
-                        amount: input?.finalamount,
-                        status: true,
-                    });
+                const updated = await Wallet.findOneAndUpdate(
+                    { userid: refUser._id },
+                    { $inc: { amount: bonusAmount } },
+                    { new: true }
+                );
 
+                if (updated) {
                     await walletSummery.create({
-                        userid: user._id,
-                        orderid: tranorderid,
-                        amount: input?.finalamount,
-                        type: "debit",
-                        wallet: walt.amount,
-                        actiontype: "join",
-                    });
-                    return res.status(200).json({
-                        data: data,
-                        success: true,
-                        message: "success",
+                        userid: refUser._id,
+                        orderid: "-",
+                        amount: bonusAmount,
+                        sender_id: user._id,
+                        type: "credit",
+                        wallet: updated.amount,
+                        actiontype: "bonus",
                     });
                 }
-            }
-        }
+            })
+        );
+
+        return res.status(200).json({
+            data: betData,
+            success: true,
+            message: "success",
+        });
     } catch (error) {
-        console.log("1 min user bate fail ==>", error);
         return catchBlock(res, error);
     }
 };
 module.exports.bate = bate;
 
-const oneMinOrderList = async function (req, res) {
+
+const fastWinOrderList = async function (req, res) {
     try {
         const user = req?.user;
         const input = req?.body;
-
         const page = input?.page || 1;
         const pagerow = input?.pagerow || 10;
         const skip = (page - 1) * pagerow;
@@ -330,22 +301,23 @@ const oneMinOrderList = async function (req, res) {
         const levelTab = input?.levelTab;
 
         const query = levelTab === 3 ? { status: false } : levelTab === 4 ? { status: true } : {};
-
+        let currentPeriodId = await fastWinPeriodIdModel.findOne().sort({ _id: -1 }).limit(1);
+        console.log("currentPeriodId", periodid);
         const resultQuery = {
             userid: user._id,
             created_at: { $gte: new Date().setHours(0, 0, 0, 0) },
             tab: category,
-            periodid: periodid,
+            periodid: currentPeriodId?.gameid,
             ...query,
         };
         const [result, resultCount, userResults] = await Promise.all([
-            oneMinBetting.find(resultQuery).skip(skip).limit(pagerow),
-            oneMinBetting.countDocuments(resultQuery),
-            oneMinUserResult.aggregate([
+            fastGameBetting.find(resultQuery).skip(skip).limit(pagerow),
+            fastGameBetting.countDocuments(resultQuery),
+            fastWinUserResult.aggregate([
                 { $match: { userid: new ObjectId(user._id), ...query } },
                 {
                     $lookup: {
-                        from: "oneminresults",
+                        from: "fastwinresults",
                         localField: "periodid",
                         foreignField: "periodid",
                         as: "Result",
@@ -379,9 +351,7 @@ const oneMinOrderList = async function (req, res) {
             win: userResults.some((value) => value.status === true),
             wait: result.length > 0,
         };
-
-        // Get the total count using a single query for optimized performance
-        const userResultsCount = await oneMinUserResult.countDocuments({ userid: new ObjectId(user._id), ...query });
+        const userResultsCount = await fastWinUserResult.countDocuments({ userid: new ObjectId(user._id), ...query });
         const totalDocumentsCount = resultCount + userResultsCount;
 
         return res.json({
@@ -394,13 +364,13 @@ const oneMinOrderList = async function (req, res) {
         });
 
     } catch (error) {
-        console.log("error",error);
         return catchBlock(res, error);
     }
 };
-module.exports.oneMinOrderList = oneMinOrderList;
+module.exports.fastWinOrderList = fastWinOrderList;
 
-const oneMinTrend = async function (req, res) {
+
+const fastWinTrend = async function (req, res) {
     let resArr = [];
     let res1Arr = [];
     let data = {};
@@ -420,28 +390,28 @@ const oneMinTrend = async function (req, res) {
         const nextDate = new Date(currentDate);
         nextDate.setDate(currentDate.getDate() + 1);
 
-        const results = await oneMinResult.find({
+        const results = await fastWinResult.find({
             tabtype: category,
             created_at: { $gte: currentDate, $lt: nextDate },
         })
             .sort({ _id: -1 })
             .exec();
 
-        let greencount = await oneMinResult.countDocuments({
+        let greencount = await fastWinResult.countDocuments({
             tabtype: category,
             randomcolor: { $in: ["green", "green++violet"] },
             resulttype: { $in: ["random", "real"] },
             created_at: { $gte: currentDate, $lt: nextDate },
         });
 
-        let redcount = await oneMinResult.countDocuments({
+        let redcount = await fastWinResult.countDocuments({
             tabtype: category,
             randomcolor: { $in: ["red", "red++violet"] },
             resulttype: { $in: ["random", "real"] },
             created_at: { $gte: currentDate, $lt: nextDate },
         });
 
-        let violetcount = await oneMinResult.countDocuments({
+        let violetcount = await fastWinResult.countDocuments({
             tabtype: category,
             randomcolor: { $in: ["red++violet", "green++violet"] },
             resulttype: { $in: ["random", "real"] },
@@ -540,9 +510,9 @@ const oneMinTrend = async function (req, res) {
         data.redcount = redcount;
         data.totalviolet = violetcount;
 
-       return res.json({ success: true, response: 1, message: "Success", data });
+        return res.json({ success: true, response: 1, message: "Success", data });
     } catch (error) {
         return catchBlock(res, error);
     }
 };
-module.exports.oneMinTrend = oneMinTrend;
+module.exports.fastWinTrend = fastWinTrend;

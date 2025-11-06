@@ -7,6 +7,7 @@ router.use(require("./result"));
 router.use(require("./auth"));
 router.get("/gameid", winController.gameid);
 router.use("/one", require("./oneMinGame/index"));
+router.use("/fast", require("./fastWinGame/index"));
 router.use("/", require("./home"));
 
 //Admin Routes

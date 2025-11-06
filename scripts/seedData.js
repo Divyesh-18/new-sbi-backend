@@ -20,7 +20,9 @@ const modelsToLoad = [
   { name: "Products", forceUpdate: false },
   { name: "countrys_codes", forceUpdate: false },
   { name: "oneMinManuallyResultSwitch" , forceUpdate:false},
-  { name: "oneMinManuallyResult", forceUpdate: false }
+  { name: "oneMinManuallyResult", forceUpdate: false },
+  { name: "fastWinManualResult", forceUpdate: false },
+  { name: "fastWinManualResultSwitch", forceUpdate: false }
 
 
 ];

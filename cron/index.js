@@ -13,7 +13,10 @@ cron.schedule('*/1 * * * *', () => {
     console.log('cron run.....');
 });
 
-
+cron.schedule("*/30 * * * * *", () => {
+    resultController.fastGameBateResult();
+    console.log('fastGameBateResult cron run.....');
+})
 
 cron.schedule('1 0 * * *', async () => {
     await resultController.intrast();
@@ -25,6 +28,7 @@ cron.schedule('1 0 * * *', async () => {
 
 cron.schedule("1 0 * * *", async () => {
     await resultController.clearPeriodId();
+    await resultController.clearFastWinPeriodId();
     console.log('Clear Period Id successFully');
 }, {
     scheduled: true,

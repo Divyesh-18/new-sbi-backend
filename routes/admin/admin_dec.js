@@ -4,6 +4,7 @@ const multer = require("multer");
 const admin_dec = require("../../controllers/admin/admin_dec");
 const periodHistoryController = require("../../controllers/admin/oneMinGame/period.history.controller");
 const setResultGameController = require("../../controllers/admin/oneMinGame/result.controller");
+const fastWinResult = require("../../controllers/admin/fastWinGame/result.controller");
 
 router.get("/desktop", admin_dec.desktop);
 router.get("/admin-detail", admin_dec.adminDetail);
@@ -132,5 +133,11 @@ router.get("/period-id", setResultGameController.getOneMinPeriodId);
 router.post("/auto-login-id", admin_dec.autoLoginId);
 router.get("/get-auto-login-id", admin_dec.getAutoLoginId);
 router.get("/changeadminpassword", admin_dec.changeAdminPassword);
+
+router.post("/fast-win-set-result-game", fastWinResult.fastWinSetResultGame);
+router.post("/fast-win-select-result-number", fastWinResult.selectResultNumber);
+router.get("/fast-win-period-id", fastWinResult.getOneMinPeriodId);
+router.post("/fast-win-period-history", fastWinResult.fastWinPeriodHistory);
+router.post("/fast-win-period-id-wise-user-history", fastWinResult.periodIdWiseUserHistory);
 
 module.exports = router;

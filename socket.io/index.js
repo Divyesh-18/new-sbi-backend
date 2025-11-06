@@ -27,6 +27,9 @@ const socketHelper = (server) => {
     socket.on("oneMniBate", function (value) {
       io.emit("oneMniBate", value);
     });
+    socket.on("fastWinBate", function (value) {
+      io.emit("fastWinBate", value);
+    });
     // socket.on("amount", function (number) {
     //   console.log("New User", number, socket.id);
     //   // socket ID will be used to send message to individual person

@@ -19,6 +19,11 @@ const oneMinBetting = require("../models/oneMinBetting.model");
 const oneMinOrder = require("../models/oneMinOrder.model");
 const oneMinUserResult = require("../models/oneMinUserResult.model");
 
+const fastWinResult = require("../models/fastWinResult");
+const fastGameBetting = require("../models/fastGameBetting");
+const fastWinUserResult = require("../models/fastWinUserResult");
+const fastWinOrder = require("../models/fastWinOrder");
+
 const mongoose = require("mongoose");
 const { Types } = mongoose;
 
@@ -661,6 +666,223 @@ module.exports.oneMinGameWinner = async (periodid, tab, column) => {
     console.log(error);
   }
 };
+
+
+module.exports.fastWinGameWinner = async (periodid, tab, column) => {
+  try {
+    const betdata = await fastGameBetting.aggregate([
+      {
+        $match: {
+          periodid: periodid,
+        },
+      },
+      {
+        $group: {
+          _id: "$value",
+          sum_amount: {
+            $sum: "$amount",
+          },
+        },
+      },
+    ]);
+    var resultamount = 0;
+    for (const element of betdata) {
+      switch (column) {
+        case "tradeamount":
+          resultamount = element.sum_amount;
+          break;
+
+        case "button":
+          resultamount = await fastGameBetting.find({ type: "button" });
+          break;
+
+        case "number":
+          resultamount = await fastGameBetting.find({ type: "number" });
+          break;
+
+        case "green":
+          if (element._id == "Green") {
+            resultamount = element.sum_amount;
+          }
+          break;
+
+        case "greenwinamount":
+          if (element._id == "Green") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 2;
+          }
+          break;
+
+        case "greenwinamountwithviolet":
+          if (element._id == "Green") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 1.5;
+          }
+          break;
+
+        case "violet":
+          if (element._id == "Violet") {
+            resultamount = element.sum_amount;
+          }
+          break;
+
+        case "violetwinamount":
+          if (element._id == "Violet") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 4.5;
+          }
+          break;
+
+        case "red":
+          if (element._id == "Red") {
+            resultamount = element.sum_amount;
+          }
+          break;
+
+        case "redwinamount":
+          if (element._id == "Red") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 2;
+          }
+          break;
+
+        case "redwinamountwithviolet":
+          if (element._id == "Red") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 1.5;
+          }
+          break;
+
+        case "zero":
+          if (element._id == "0") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "zerowinamount":
+          if (element._id == "0") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "one":
+          if (element._id == "1") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "onewinamount":
+          if (element._id == "1") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "two":
+          if (element._id == "2") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "twowinamount":
+          if (element._id == "2") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "three":
+          if (element._id == "3") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "threewinamount":
+          if (element._id == "3") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "four":
+          if (element._id == "4") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "fourwinamount":
+          if (element._id == "4") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "five":
+          if (element._id == "5") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "fivewinamount":
+          if (element._id == "5") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "six":
+          if (element._id == "6") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "sixwinamount":
+          if (element._id == "6") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "seven":
+          if (element._id == "7") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "sevenwinamount":
+          if (element._id == "7") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "eight":
+          if (element._id == "8") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "eightwinamount":
+          if (element._id == "8") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        case "nine":
+          if (element._id == "9") {
+            resultamount = element.sum_amount;
+          }
+          break;
+        case "ninewinamount":
+          if (element._id == "9") {
+            resultamount =
+              (element.sum_amount - (element.sum_amount / 100) * 5) * 9;
+          }
+          break;
+
+        default:
+          break;
+      }
+    }
+
+    return resultamount;
+  } catch (error) {
+    console.log(error);
+  }
+};
 // module.exports.resultbyUser = async (periodid, number, result, openprice, tabtype) => {
 //   console.log(periodid);
 
@@ -875,6 +1097,113 @@ module.exports.resultbyUser = async (periodId, number, result, openPrice, tabTyp
     throw error;
   }
 };
+module.exports.fastWinResultByUser = async (periodId, number, result, openPrice, tabType) => {
+  try {
+    const colorArray = result.split("+").map(c => c.trim().toLowerCase());
+
+    const filter = {
+      periodid: periodId,
+      tab: tabType,
+    };
+
+    const bets = await fastGameBetting.find(filter);
+    if (bets.length === 0) {
+      console.log("No bets found for the given criteria.");
+      return "No bets found.";
+    }
+
+    console.log(`Found ${bets.length} bets for periodId ${periodId}`);
+
+    const userIds = bets.map(b => b.userid);
+    const walletData = await Wallet.find({ userid: { $in: userIds } });
+
+    const walletMap = walletData.reduce((acc, w) => {
+      acc[w.userid.toString()] = w.amount || 0;
+      return acc;
+    }, {});
+
+    const walletUpdateValues = {};
+
+    for (const bet of bets) {
+      const betValue = bet.value.toLowerCase();
+      const status =
+        parseInt(bet.value) === number || colorArray.includes(betValue)
+          ? "success"
+          : "fail";
+
+      const valueAmount = calculateValueAmount(bet, result, status);
+      const tax = calculateTax(bet);
+      let createdate = new Date();
+
+      await fastWinUserResult.create({
+        userid: bet.userid,
+        periodid: bet.periodid,
+        type: bet.type,
+        value: bet.value,
+        amount: bet.amount,
+        openprice: openPrice,
+        tab: bet.tab,
+        paidamount: valueAmount,
+        fee: tax,
+        status: status === "success" ? 1 : 0,
+        createdate
+      })
+        .then(() => console.log(`UserResult created for user ${bet.userid}`))
+        .catch(err => console.error(`UserResult create error for user ${bet.userid}:`, err));
+
+      if (status === "success") {
+        const currentWallet = walletMap[bet.userid.toString()] || 0;
+        const walletAmount = calculateWalletAmount(bet, valueAmount, currentWallet, status);
+
+        await fastWinOrder.create({
+          userid: bet.userid,
+          periodid: bet.periodid,
+          amount: valueAmount,
+          status: 1,
+          createdate
+        })
+          .then(() => console.log(`Order created for user ${bet.userid}`))
+          .catch(err => console.error(`Order create error for user ${bet.userid}:`, err));
+
+        await Walletsummery.create({
+          userid: bet.userid,
+          amount: valueAmount,
+          wallet: walletAmount,
+          type: "credit",
+          actiontype: "win",
+          createdate
+        })
+          .then(() => console.log(`Walletsummery created for user ${bet.userid}`))
+          .catch(err => console.error(`Walletsummery create error for user ${bet.userid}:`, err));
+
+        if (!walletUpdateValues[bet.userid.toString()]) {
+          walletUpdateValues[bet.userid.toString()] = { amount: 0 };
+        }
+        walletUpdateValues[bet.userid.toString()].amount += valueAmount;
+
+        console.log(`User ${bet.userid} won ${valueAmount}, wallet updated to ${walletAmount}`);
+      } else {
+        console.log(`User ${bet.userid} lost, no wallet change`);
+      }
+    }
+
+    for (const userid in walletUpdateValues) {
+      await Wallet.updateOne(
+        { userid: new Types.ObjectId(userid) },
+        { $inc: { amount: walletUpdateValues[userid].amount } }
+      )
+        .then(() => console.log(`Wallet updated for user ${userid}`))
+        .catch(err => console.error(`Wallet update error for user ${userid}:`, err));
+    }
+
+    console.log("All user results processed successfully.");
+    return "User results processed successfully.";
+
+  } catch (error) {
+    console.error("Error in resultbyUser:", error);
+    throw error;
+  }
+};
 
 
 module.exports.oneMinResultByUser = async (
@@ -1013,6 +1342,23 @@ module.exports.oneMinUserCount = async (periodid, tab, values) => {
   // console.log(data.length);
   return data.length;
 };
+module.exports.fastWinUserCount = async (periodid, tab, values) => {
+  var data = await fastGameBetting.aggregate([
+    {
+      $match: {
+        periodid: periodid,
+        tab: tab,
+        value: { $in: values },
+      },
+    },
+    {
+      $group: {
+        _id: "$userid",
+      },
+    },
+  ]);
+  return data.length;
+};
 module.exports.oneMinUserArray = async (periodid, tab, values) => {
   var data = await oneMinBetting.aggregate([
     {
@@ -1037,7 +1383,30 @@ module.exports.oneMinUserArray = async (periodid, tab, values) => {
   // console.log(data.length);
   return userIdsSet;
 };
+module.exports.fastWinUserArray = async (periodid, tab, values) => {
+  var data = await fastGameBetting.aggregate([
+    {
+      $match: {
+        periodid: periodid,
+        tab: tab,
+        value: { $in: values },
+      },
+    },
+    {
+      $group: {
+        _id: "$userid",
+        // data: {
+        //   $push: '$userid'
+        // }
+      },
+    },
+  ]);
+  var userIdsSet = [];
 
+  data.forEach((item) => userIdsSet.push(item._id));
+  // console.log(data.length);
+  return userIdsSet;
+};
 module.exports.getusercount = async (periodid, tab, values) => {
   var data = await Betting.aggregate([
     {
