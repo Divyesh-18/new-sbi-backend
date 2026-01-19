@@ -3084,6 +3084,20 @@ const siteSettingUpdate = async function (req, res) {
         existingSetting.thad_qr_code = files.thad_qr_code[0].filename;
       }
     }
+    if (files.second_qr_code){
+      const second_qr_code = path.extname(files.second_qr_code[0].filename);
+      const allowedExtensions = [".jpg", ".jpeg", ".png"];
+      if (!allowedExtensions.includes(second_qr_code.toLowerCase())) {
+        return res.status(400).json({
+          message:
+            "Invalid file format. Only .jpg and .png files are allowed updates.",
+          response: 0,
+          success: false,
+        });
+      } else {
+        existingSetting.second_qr_code = files.second_qr_code[0].filename;
+      }
+    }
     if (files.usdt_qr){
       const usdtQrCode = path.extname(files.usdt_qr[0].filename);
       const allowedExtensions = [".jpg", ".jpeg", ".png"];

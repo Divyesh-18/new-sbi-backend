@@ -275,7 +275,7 @@ const bateresult = async function (req, res) {
     // const formattedNumber = sprintf("%03d", minutesDivided);
     // const nextperiodid = currentDate + formattedNumber;
 
-    let currantinitcount = moment().hours() * 60 + moment().minutes() + 1;
+    let currantinitcount = moment().tz("Asia/Kolkata").hours() * 60 + moment().tz("Asia/Kolkata").minutes() + 1;
     const minutesDivided = Math.floor(currantinitcount / 3) + 1;
     currantinitcount = sprintf("%03d", minutesDivided);
     const nextperiodid = moment().format("YYYYMMDD") + currantinitcount;
@@ -535,7 +535,7 @@ const OneMinGameBateResult = async function (req, res) {
     const now = moment().format("YYYY-MM-DD HH:mm:ss");
     var firstperiodid = moment().format("YYYYMMDD") + sprintf("%04d", 1);
     var lastperiodid = moment().subtract(1, "days").format("YYYYMMDD") + sprintf("%04d", 1440);
-    let currantinitcount = moment().hours() * 60 + moment().minutes() + 1;
+    let currantinitcount = moment().tz("Asia/Kolkata").hours() * 60 + moment().tz("Asia/Kolkata").minutes() + 1;
      currantinitcount =sprintf("%04d", currantinitcount);
     const nextperiodid = moment().format("YYYYMMDD") + sprintf("%04d", currantinitcount);
     const nextid = periodid + 1;
@@ -802,7 +802,7 @@ const fastGameBateResult = async function (req, res) {
     // const formattedNumber = sprintf("%03d", minutesDivided);
     // const nextperiodid = currentDate + formattedNumber;
 
-    let currantinitcount = moment().hours() * 60 * 60 + moment().minutes() * 60 + moment().seconds() + 1;
+    let currantinitcount = moment().tz("Asia/Kolkata").hours() * 60 * 60 + moment().tz("Asia/Kolkata").minutes() * 60 + moment().tz("Asia/Kolkata").seconds() + 1;
     const secondsDivided = Math.floor(currantinitcount / 30) + 1;
     currantinitcount = sprintf("%04d", secondsDivided);
     const nextperiodid = moment().format("YYYYMMDD") + currantinitcount;

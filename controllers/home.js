@@ -141,6 +141,7 @@ const getupi = async function (req, res) {
       UPI_ID: paymentsetting.UPI_ID,
       CRYPTO_ID: paymentsetting.CRYPTO_ID,
       second_upi_id: paymentsetting.second_upi_id,
+      second_qr_code: `${process.env.IMAGE_URL}/images/${paymentsetting.second_qr_code}`,
       third_upi_id: paymentsetting.third_upi_id,
       thad_qr_code: `${process.env.IMAGE_URL}/images/${paymentsetting.thad_qr_code}`,
       usdt_code: paymentsetting.usdt_code,

@@ -7,7 +7,7 @@ const BankDetailSchema = mongoose.Schema({
 	name: String,
 	ifsc_code: String,
 	bank_code: String,
-	bank_account: Number,
+	bank_account: String,
 	upi: String,
 	mobile_number: Number,
 	address: String,

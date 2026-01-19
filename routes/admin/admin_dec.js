@@ -106,6 +106,7 @@ router.put(
     { name: "apk", maxCount: 1 },
     { name: "qr_code", maxCount: 1 },
     { name: "thad_qr_code", maxCount: 1},
+    { name: "second_qr_code", maxCount: 1},
     { name: "usdt_qr", maxCount: 1}
   ]),
   admin_dec.siteSettingUpdate

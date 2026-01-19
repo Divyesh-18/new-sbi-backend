@@ -97,6 +97,9 @@ const paymentsettingSchema = mongoose.Schema({
     second_upi_id:{
         type: String
     },
+    second_qr_code:{
+        type: String,
+    },
     third_upi_id:{
         type: String
     },
