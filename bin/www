@@ -6,6 +6,7 @@
 
 var app = require("../app");
 var http = require("http");
+var https = require("https");
 require("dotenv").config();
 
 /**
@@ -16,22 +17,34 @@ var port = normalizePort(process.env.PORT || "3000");
 app.set("port", port);
 
 /**
- * Create HTTP server.
+ * Create HTTP/HTTPS server.
  */
+
+let httpServer;
+
 if (process.env.MODE == "LIVE") {
   const fs = require('fs');
-  const credentials = {
-    key: fs.readFileSync('/etc/letsencrypt/live/color.abundantia.club/privkey.pem'),
-    cert: fs.readFileSync('/etc/letsencrypt/live/color.abundantia.club/cert.pem'),
-    ca: fs.readFileSync('/etc/letsencrypt/live/color.abundantia.club/chain.pem'),
-  };
-  // var httpServer = http.createServer(app);
-  var httpServer = http.createServer(credentials, app);
+  try {
+    const credentials = {
+      key: fs.readFileSync('/etc/letsencrypt/live/color.abundantia.club/privkey.pem'),
+      cert: fs.readFileSync('/etc/letsencrypt/live/color.abundantia.club/cert.pem'),
+      ca: fs.readFileSync('/etc/letsencrypt/live/color.abundantia.club/chain.pem'),
+    };
+    // Use https.createServer for SSL certificates
+    httpServer = https.createServer(credentials, app);
+    console.log('Running in LIVE mode with HTTPS');
+  } catch (error) {
+    console.error('Error loading SSL certificates, falling back to HTTP:', error.message);
+    httpServer = http.createServer(app);
+  }
 } else {
-  var httpServer = http.createServer(app);
+  httpServer = http.createServer(app);
+  console.log('Running in DEV mode with HTTP');
 }
+
 const socketHelper = require("../socket.io/index.js");
-socketHelper(httpServer);
+const io = socketHelper(httpServer);
+
 /**
  * Listen on provided port, on all network interfaces.
  */
@@ -94,4 +107,70 @@ function onListening() {
   var addr = httpServer.address();
   var bind = typeof addr === "string" ? "pipe " + addr : "port " + addr.port;
   console.log("Listening on " + bind);
+  console.log(`Server started successfully at ${new Date().toISOString()}`);
 }
+
+/**
+ * Graceful shutdown handling
+ */
+
+let isShuttingDown = false;
+
+async function gracefulShutdown(signal) {
+  if (isShuttingDown) {
+    console.log('Shutdown already in progress...');
+    return;
+  }
+
+  isShuttingDown = true;
+  console.log(`\n${signal} received, starting graceful shutdown...`);
+
+  // Set a timeout for forced shutdown
+  const forceShutdownTimeout = setTimeout(() => {
+    console.error('Forced shutdown after timeout');
+    process.exit(1);
+  }, 30000); // 30 seconds
+
+  try {
+    // Stop accepting new connections
+    httpServer.close(() => {
+      console.log('HTTP server closed');
+    });
+
+    // Close all Socket.io connections
+    if (io) {
+      console.log('Closing Socket.io connections...');
+      io.close(() => {
+        console.log('Socket.io connections closed');
+      });
+    }
+
+    // Wait a bit for connections to close
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // MongoDB connection will be closed by the connection handler
+    console.log('Graceful shutdown completed');
+    clearTimeout(forceShutdownTimeout);
+    process.exit(0);
+  } catch (error) {
+    console.error('Error during graceful shutdown:', error);
+    clearTimeout(forceShutdownTimeout);
+    process.exit(1);
+  }
+}
+
+// Listen for termination signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
+  gracefulShutdown('uncaughtException');
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  // Don't exit on unhandled rejections, just log them
+});

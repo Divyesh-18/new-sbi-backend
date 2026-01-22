@@ -109,6 +109,8 @@ module.exports.otpDelete = async (number, email) => {
 //   });
 // }
 const generatedCodes = new Set();
+const MAX_GENERATED_CODES = 10000; // Limit the size of the Set
+
 module.exports.refcode = async () => {
   return new Promise((resolve, reject) => {
     const firstLetters = ["A", "B", "C", "D", "E", "F"];
@@ -118,6 +120,9 @@ module.exports.refcode = async () => {
     const digitsLength = digits.length;
 
     let result = "";
+    let attempts = 0;
+    const maxAttempts = 100;
+
     do {
       result = firstLetters[Math.floor(Math.random() * firstLetters.length)];
       result += otherLetters.charAt(
@@ -126,8 +131,23 @@ module.exports.refcode = async () => {
       for (let i = 0; i < 6; i++) {
         result += digits.charAt(Math.floor(Math.random() * digitsLength));
       }
+      attempts++;
+      
+      // Prevent infinite loop
+      if (attempts > maxAttempts) {
+        console.warn('Max attempts reached for code generation, clearing cache');
+        generatedCodes.clear();
+      }
     } while (generatedCodes.has(result));
+    
     generatedCodes.add(result);
+
+    // Clear old codes if the Set gets too large
+    if (generatedCodes.size > MAX_GENERATED_CODES) {
+      const codesToKeep = Array.from(generatedCodes).slice(-MAX_GENERATED_CODES / 2);
+      generatedCodes.clear();
+      codesToKeep.forEach(code => generatedCodes.add(code));
+    }
 
     resolve(result);
   });
@@ -999,7 +1019,7 @@ module.exports.resultbyUser = async (periodId, number, result, openPrice, tabTyp
       tab: tabType,
     };
 
-    const bets = await Betting.find(filter);
+    const bets = await Betting.find(filter).lean(); // Use lean() for better performance
     if (bets.length === 0) {
       console.log("No bets found for the given criteria.");
       return "No bets found.";
@@ -1008,14 +1028,20 @@ module.exports.resultbyUser = async (periodId, number, result, openPrice, tabTyp
     console.log(`Found ${bets.length} bets for periodId ${periodId}`);
 
     const userIds = bets.map(b => b.userid);
-    const walletData = await Wallet.find({ userid: { $in: userIds } });
+    const walletData = await Wallet.find({ userid: { $in: userIds } }).lean();
 
     const walletMap = walletData.reduce((acc, w) => {
       acc[w.userid.toString()] = w.amount || 0;
       return acc;
     }, {});
 
+    const createdate = new Date();
     const walletUpdateValues = {};
+    
+    // Prepare bulk operations
+    const userResultsToInsert = [];
+    const ordersToInsert = [];
+    const walletSummariesToInsert = [];
 
     for (const bet of bets) {
       const betValue = bet.value.toLowerCase();
@@ -1026,9 +1052,8 @@ module.exports.resultbyUser = async (periodId, number, result, openPrice, tabTyp
 
       const valueAmount = calculateValueAmount(bet, result, status);
       const tax = calculateTax(bet);
-      let createdate = new Date();
 
-      await UserResult.create({
+      userResultsToInsert.push({
         userid: bet.userid,
         periodid: bet.periodid,
         type: bet.type,
@@ -1040,54 +1065,84 @@ module.exports.resultbyUser = async (periodId, number, result, openPrice, tabTyp
         fee: tax,
         status: status === "success" ? 1 : 0,
         createdate
-      })
-        .then(() => console.log(`UserResult created for user ${bet.userid}`))
-        .catch(err => console.error(`UserResult create error for user ${bet.userid}:`, err));
+      });
 
       if (status === "success") {
         const currentWallet = walletMap[bet.userid.toString()] || 0;
         const walletAmount = calculateWalletAmount(bet, valueAmount, currentWallet, status);
 
-        await Order.create({
+        ordersToInsert.push({
           userid: bet.userid,
           periodid: bet.periodid,
           amount: valueAmount,
           status: 1,
           createdate
-        })
-          .then(() => console.log(`Order created for user ${bet.userid}`))
-          .catch(err => console.error(`Order create error for user ${bet.userid}:`, err));
+        });
 
-        await Walletsummery.create({
+        walletSummariesToInsert.push({
           userid: bet.userid,
           amount: valueAmount,
           wallet: walletAmount,
           type: "credit",
           actiontype: "win",
           createdate
-        })
-          .then(() => console.log(`Walletsummery created for user ${bet.userid}`))
-          .catch(err => console.error(`Walletsummery create error for user ${bet.userid}:`, err));
+        });
 
         if (!walletUpdateValues[bet.userid.toString()]) {
           walletUpdateValues[bet.userid.toString()] = { amount: 0 };
         }
         walletUpdateValues[bet.userid.toString()].amount += valueAmount;
-
-        console.log(`User ${bet.userid} won ${valueAmount}, wallet updated to ${walletAmount}`);
-      } else {
-        console.log(`User ${bet.userid} lost, no wallet change`);
+        
+        // Update wallet map for subsequent calculations
+        walletMap[bet.userid.toString()] = walletAmount;
       }
     }
 
-    for (const userid in walletUpdateValues) {
-      await Wallet.updateOne(
-        { userid: new Types.ObjectId(userid) },
-        { $inc: { amount: walletUpdateValues[userid].amount } }
-      )
-        .then(() => console.log(`Wallet updated for user ${userid}`))
-        .catch(err => console.error(`Wallet update error for user ${userid}:`, err));
+    // Execute bulk operations in parallel
+    const bulkOperations = [];
+    
+    if (userResultsToInsert.length > 0) {
+      bulkOperations.push(
+        UserResult.insertMany(userResultsToInsert, { ordered: false })
+          .then(() => console.log(`${userResultsToInsert.length} UserResults created`))
+          .catch(err => console.error('UserResult bulk insert error:', err.message))
+      );
     }
+
+    if (ordersToInsert.length > 0) {
+      bulkOperations.push(
+        Order.insertMany(ordersToInsert, { ordered: false })
+          .then(() => console.log(`${ordersToInsert.length} Orders created`))
+          .catch(err => console.error('Order bulk insert error:', err.message))
+      );
+    }
+
+    if (walletSummariesToInsert.length > 0) {
+      bulkOperations.push(
+        Walletsummery.insertMany(walletSummariesToInsert, { ordered: false })
+          .then(() => console.log(`${walletSummariesToInsert.length} Walletsummeries created`))
+          .catch(err => console.error('Walletsummery bulk insert error:', err.message))
+      );
+    }
+
+    // Update wallets in bulk
+    const walletBulkOps = Object.entries(walletUpdateValues).map(([userid, values]) => ({
+      updateOne: {
+        filter: { userid: new Types.ObjectId(userid) },
+        update: { $inc: { amount: values.amount } }
+      }
+    }));
+
+    if (walletBulkOps.length > 0) {
+      bulkOperations.push(
+        Wallet.bulkWrite(walletBulkOps)
+          .then(() => console.log(`${walletBulkOps.length} Wallets updated`))
+          .catch(err => console.error('Wallet bulk update error:', err.message))
+      );
+    }
+
+    // Wait for all bulk operations to complete
+    await Promise.all(bulkOperations);
 
     console.log("All user results processed successfully.");
     return "User results processed successfully.";
@@ -1106,7 +1161,7 @@ module.exports.fastWinResultByUser = async (periodId, number, result, openPrice,
       tab: tabType,
     };
 
-    const bets = await fastGameBetting.find(filter);
+    const bets = await fastGameBetting.find(filter).lean(); // Use lean() for better performance
     if (bets.length === 0) {
       console.log("No bets found for the given criteria.");
       return "No bets found.";
@@ -1115,14 +1170,20 @@ module.exports.fastWinResultByUser = async (periodId, number, result, openPrice,
     console.log(`Found ${bets.length} bets for periodId ${periodId}`);
 
     const userIds = bets.map(b => b.userid);
-    const walletData = await Wallet.find({ userid: { $in: userIds } });
+    const walletData = await Wallet.find({ userid: { $in: userIds } }).lean();
 
     const walletMap = walletData.reduce((acc, w) => {
       acc[w.userid.toString()] = w.amount || 0;
       return acc;
     }, {});
 
+    const createdate = new Date();
     const walletUpdateValues = {};
+    
+    // Prepare bulk operations
+    const userResultsToInsert = [];
+    const ordersToInsert = [];
+    const walletSummariesToInsert = [];
 
     for (const bet of bets) {
       const betValue = bet.value.toLowerCase();
@@ -1133,9 +1194,8 @@ module.exports.fastWinResultByUser = async (periodId, number, result, openPrice,
 
       const valueAmount = calculateValueAmount(bet, result, status);
       const tax = calculateTax(bet);
-      let createdate = new Date();
 
-      await fastWinUserResult.create({
+      userResultsToInsert.push({
         userid: bet.userid,
         periodid: bet.periodid,
         type: bet.type,
@@ -1147,60 +1207,90 @@ module.exports.fastWinResultByUser = async (periodId, number, result, openPrice,
         fee: tax,
         status: status === "success" ? 1 : 0,
         createdate
-      })
-        .then(() => console.log(`UserResult created for user ${bet.userid}`))
-        .catch(err => console.error(`UserResult create error for user ${bet.userid}:`, err));
+      });
 
       if (status === "success") {
         const currentWallet = walletMap[bet.userid.toString()] || 0;
         const walletAmount = calculateWalletAmount(bet, valueAmount, currentWallet, status);
 
-        await fastWinOrder.create({
+        ordersToInsert.push({
           userid: bet.userid,
           periodid: bet.periodid,
           amount: valueAmount,
           status: 1,
           createdate
-        })
-          .then(() => console.log(`Order created for user ${bet.userid}`))
-          .catch(err => console.error(`Order create error for user ${bet.userid}:`, err));
+        });
 
-        await Walletsummery.create({
+        walletSummariesToInsert.push({
           userid: bet.userid,
           amount: valueAmount,
           wallet: walletAmount,
           type: "credit",
           actiontype: "win",
           createdate
-        })
-          .then(() => console.log(`Walletsummery created for user ${bet.userid}`))
-          .catch(err => console.error(`Walletsummery create error for user ${bet.userid}:`, err));
+        });
 
         if (!walletUpdateValues[bet.userid.toString()]) {
           walletUpdateValues[bet.userid.toString()] = { amount: 0 };
         }
         walletUpdateValues[bet.userid.toString()].amount += valueAmount;
-
-        console.log(`User ${bet.userid} won ${valueAmount}, wallet updated to ${walletAmount}`);
-      } else {
-        console.log(`User ${bet.userid} lost, no wallet change`);
+        
+        // Update wallet map for subsequent calculations
+        walletMap[bet.userid.toString()] = walletAmount;
       }
     }
 
-    for (const userid in walletUpdateValues) {
-      await Wallet.updateOne(
-        { userid: new Types.ObjectId(userid) },
-        { $inc: { amount: walletUpdateValues[userid].amount } }
-      )
-        .then(() => console.log(`Wallet updated for user ${userid}`))
-        .catch(err => console.error(`Wallet update error for user ${userid}:`, err));
+    // Execute bulk operations in parallel
+    const bulkOperations = [];
+    
+    if (userResultsToInsert.length > 0) {
+      bulkOperations.push(
+        fastWinUserResult.insertMany(userResultsToInsert, { ordered: false })
+          .then(() => console.log(`${userResultsToInsert.length} Fast Win UserResults created`))
+          .catch(err => console.error('Fast Win UserResult bulk insert error:', err.message))
+      );
     }
 
-    console.log("All user results processed successfully.");
+    if (ordersToInsert.length > 0) {
+      bulkOperations.push(
+        fastWinOrder.insertMany(ordersToInsert, { ordered: false })
+          .then(() => console.log(`${ordersToInsert.length} Fast Win Orders created`))
+          .catch(err => console.error('Fast Win Order bulk insert error:', err.message))
+      );
+    }
+
+    if (walletSummariesToInsert.length > 0) {
+      bulkOperations.push(
+        Walletsummery.insertMany(walletSummariesToInsert, { ordered: false })
+          .then(() => console.log(`${walletSummariesToInsert.length} Fast Win Walletsummeries created`))
+          .catch(err => console.error('Fast Win Walletsummery bulk insert error:', err.message))
+      );
+    }
+
+    // Update wallets in bulk
+    const walletBulkOps = Object.entries(walletUpdateValues).map(([userid, values]) => ({
+      updateOne: {
+        filter: { userid: new Types.ObjectId(userid) },
+        update: { $inc: { amount: values.amount } }
+      }
+    }));
+
+    if (walletBulkOps.length > 0) {
+      bulkOperations.push(
+        Wallet.bulkWrite(walletBulkOps)
+          .then(() => console.log(`${walletBulkOps.length} Fast Win Wallets updated`))
+          .catch(err => console.error('Fast Win Wallet bulk update error:', err.message))
+      );
+    }
+
+    // Wait for all bulk operations to complete
+    await Promise.all(bulkOperations);
+
+    console.log("All fast win user results processed successfully.");
     return "User results processed successfully.";
 
   } catch (error) {
-    console.error("Error in resultbyUser:", error);
+    console.error("Error in fastWinResultByUser:", error);
     throw error;
   }
 };
