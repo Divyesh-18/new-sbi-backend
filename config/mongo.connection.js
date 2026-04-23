@@ -7,9 +7,9 @@ module.exports = async () => {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             // Connection pool settings
-            maxPoolSize: 50, // Maximum number of connections in the pool
-            minPoolSize: 10, // Minimum number of connections
-            socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
+            maxPoolSize: 500, // Maximum number of connections in the pool
+            minPoolSize: 50, // Minimum number of connections
+            socketTimeoutMS: 30000, // Close sockets after 45 seconds of inactivity
             serverSelectionTimeoutMS: 5000, // Keep trying to send operations for 5 seconds
             heartbeatFrequencyMS: 10000, // Check server health every 10 seconds
             // Retry settings
@@ -68,3 +68,4 @@ module.exports = async () => {
         }, 5000);
     }
 }
+
